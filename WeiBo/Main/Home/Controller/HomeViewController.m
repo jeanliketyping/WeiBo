@@ -31,35 +31,30 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    [self setNavi];
+    //初始化_data
     _data = [[NSMutableArray alloc] init];
+    [self setNavi];
     [self _createTableView];
-}
-
-- (void)viewDidAppear:(BOOL)animated{
     [self _loadData];
 }
 
 - (void)_createTableView{
     _tableView = [[WeiboTableView alloc] initWithFrame:self.view.bounds style:UITableViewStylePlain];
     [self.view addSubview:_tableView];
-    
     _tableView.header = [MJRefreshNormalHeader headerWithRefreshingTarget:self refreshingAction:@selector(_loadNewData)];
     _tableView.footer = [MJRefreshAutoFooter footerWithRefreshingTarget:self refreshingAction:@selector(_loadMoreData)];
-    
 }
 
 #pragma mark - 微博请求
-
+//上拉加载
 - (void)_loadMoreData{
     AppDelegate *delegate = (AppDelegate *)[UIApplication sharedApplication].delegate;
     SinaWeibo *sinaWeibo = delegate.sinaWeibo;
-    
     //如果已经登陆则获取微博数据
     if (sinaWeibo.isLoggedIn) {
         NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
         [params setObject:@"10" forKey:@"count"];
-        if (_data != nil) {
+        if (_data.count != 0) {
             WeiboViewLayoutFrame *layout = [_data lastObject];
             WeiboModel *model = layout.model;
             NSString *maxID = model.weiboIdStr;
@@ -69,31 +64,27 @@
                                                        params:params
                                                    httpMethod:@"GET"
                                                      delegate:self];
-        
         request.tag = 302;
     }else{
         UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"请登录" message:nil delegate:nil cancelButtonTitle:@"确认" otherButtonTitles:nil, nil];
         [alert show];
     }
-    
-    
 }
 
+//下拉刷新
 - (void)_loadNewData{
-    
     AppDelegate *delegate = (AppDelegate *)[UIApplication sharedApplication].delegate;
     SinaWeibo *sinaWeibo = delegate.sinaWeibo;
     //如果已经登陆则获取微博数据
     if (sinaWeibo.isLoggedIn){
         NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
         [params setObject:@"10" forKey:@"count"];
-        if (_data != nil) {
+        if (_data.count != 0) {
             WeiboViewLayoutFrame *layout = _data[0];
             WeiboModel *model = layout.model;
             NSString *sinceID = model.weiboIdStr;
             [params setObject:sinceID forKey:@"since_id"];
         }
-        
         SinaWeiboRequest *request = [sinaWeibo requestWithURL:home_timeline
                                                        params:params
                                                    httpMethod:@"GET"
@@ -103,11 +94,9 @@
         UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"请登录" message:nil delegate:nil cancelButtonTitle:@"确认" otherButtonTitles:nil, nil];
         [alert show];
     }
-    
 }
 
-
-
+//普通加载数据
 - (void)_loadData{
     AppDelegate *delegate = (AppDelegate *)[UIApplication sharedApplication].delegate;
     SinaWeibo *sinaWeibo = delegate.sinaWeibo;
@@ -116,7 +105,6 @@
         [self showHud:@"正在加载..."];
         NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
         [params setObject:@"10" forKey:@"count"];
-        
         SinaWeiboRequest *request = [sinaWeibo requestWithURL:home_timeline
                                                        params:params
                                                    httpMethod:@"GET"
@@ -135,9 +123,7 @@
 
 - (void)request:(SinaWeiboRequest *)request didFinishLoadingWithResult:(id)result
 {
-    
     NSLog(@"%@",result);
-    
     //每一条微博存到 数组里
     NSArray *statusesArray = [result objectForKey:@"statuses"];
     NSMutableArray *layoutFrameArray = [[NSMutableArray alloc] init];
@@ -148,7 +134,6 @@
         layout.model = model;
         [layoutFrameArray addObject:layout];
     }
-    
     if (request.tag == 300) {//普通加载
         _data = layoutFrameArray;
         [self completeHud:@"加载完成"];
@@ -171,32 +156,24 @@
         }
     }
     if (_data != nil) {
-        
         _tableView.data = _data;
         [_tableView reloadData];
-        
     }
-    
     [_tableView.header endRefreshing];
     [_tableView.footer endRefreshing];
-    
 }
 
 - (void)showNewWeiboCount:(NSInteger)count{
     if (_barImageView == nil) {
-        
         _barImageView = [[ThemeImageView alloc] initWithFrame:CGRectMake(5, -40, kScreenWidth - 10, 40)];
         _barImageView.imageName = @"timeline_notify.png";
         [self.view addSubview:_barImageView];
-        
         _barLabel = [[ThemeLabel alloc] initWithFrame:_barImageView.bounds];
         _barLabel.colorName = @"Timeline_Notice_color";
         _barLabel.backgroundColor = [UIColor clearColor];
         _barLabel.textAlignment = NSTextAlignmentCenter;
-        
         [_barImageView addSubview:_barLabel];
     }
-    
     if (count > 0) {
         _barLabel.text = [NSString stringWithFormat:@"更新了%ld条微博",count];
         [UIView animateWithDuration:0.6 animations:^{
@@ -208,9 +185,7 @@
             }];
         }];
     }
-    
     //播放声音
-    
     NSString *path = [[NSBundle mainBundle] pathForResource:@"msgcome" ofType:@"wav"];
     NSURL *url = [NSURL fileURLWithPath:path];
     
@@ -219,10 +194,6 @@
     AudioServicesCreateSystemSoundID((__bridge CFURLRef)url, &soundId);
     AudioServicesPlaySystemSound(soundId);
 }
-
-
-
-
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];

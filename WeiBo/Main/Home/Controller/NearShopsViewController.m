@@ -7,19 +7,10 @@
 //
 
 #import "NearShopsViewController.h"
-#import <CoreLocation/CoreLocation.h>
-#import "PoiModel.h"
 #import "DataService.h"
 #import "UIImageView+WebCache.h"
 
-@interface NearShopsViewController ()<UITableViewDataSource,UITableViewDelegate,CLLocationManagerDelegate>{
-    UITableView *_tableView;
-    //位置管理
-    CLLocationManager *_locationManager;
-
-}
-
-@property (nonatomic,strong)NSArray *dataList;
+@interface NearShopsViewController ()
 
 @end
 
@@ -41,14 +32,14 @@
     
     //定位
     _locationManager = [[CLLocationManager alloc] init];
-    if (_locationManager == nil) {
+//    if (_locationManager == nil) {
         _locationManager = [[CLLocationManager alloc] init];
         
-        //判断系统版本逆袭，如果大于8.0 则调用以下方法获取授权
+        //判断系统版本，如果大于8.0 则调用以下方法获取授权
         if (kVersion > 8.0) {
             [_locationManager requestAlwaysAuthorization];
         }
-    }
+//    }
     
     //设置定位精度
     [_locationManager setDesiredAccuracy:kCLLocationAccuracyBest];
@@ -75,12 +66,12 @@
 
 //开始加载网络
 -(void)loadNearShopsByPoisWithlongitude:(NSString *)longitude latitude:(NSString *)latitude{
-    
+    //01配置参数
     NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
-    [params setObject:latitude  forKey:@"lat"];
-    [params setObject:longitude forKey:@"long"];
-    [params setObject:@50 forKey:@"count"];
-    
+    [params setObject:latitude  forKey:@"lat"];//纬度
+    [params setObject:longitude forKey:@"long"];//经度
+    [params setObject:@50 forKey:@"count"];//最大请求数量
+    //获取附近商家
     __weak __typeof(self) weakSelf = self;
     [DataService requestAFUrl:nearby_pois httpMethod:@"GET" params:params data:nil block:^(id result) {
         NSArray *pois = [result objectForKey:@"pois"];
@@ -88,43 +79,30 @@
         for (NSDictionary *dic in pois) {
             //创建商业圈模型对象
             PoiModel *poi = [[PoiModel alloc] initWithDataDic:dic];
-
             [dataList addObject:poi];
         }
         __strong __typeof(self) strongSelf = weakSelf;
         strongSelf.dataList = dataList;
         [strongSelf->_tableView reloadData];
-        
-        
     }];
-
-    
-    
 }
 
 #pragma mark - CLLocationManagerDelegate
 - (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations{
-    
-
     //停止定位
     [_locationManager stopUpdatingLocation];
-    
     CLLocation *location = [locations lastObject];
-    
     //获取附近商圈
     NSString *latitude = [NSString stringWithFormat:@"%lf",location.coordinate.latitude];
     NSString *longitude = [NSString stringWithFormat:@"%lf",location.coordinate.longitude];
-    
     //开始加载数据
     [self loadNearShopsByPoisWithlongitude:longitude latitude:latitude];
-    
 }
 
 #pragma mark - UITableView DataSource
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
     return self.dataList.count;
 }
-
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
     
@@ -138,18 +116,10 @@
     [cell.imageView sd_setImageWithURL:[NSURL URLWithString:poi.icon] placeholderImage:[UIImage imageNamed:@"icon"]];
     cell.textLabel.text = poi.title;
     return cell;
-    
-    
 }
 
 - (void)backAction{
     [self dismissViewControllerAnimated:YES completion:nil];
 }
-
-
-
-
-
-
 
 @end

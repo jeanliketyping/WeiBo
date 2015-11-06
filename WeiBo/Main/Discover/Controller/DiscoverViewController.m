@@ -29,7 +29,7 @@
 - (IBAction)nearByWeiboAction:(UIButton *)sender {
     
     NearByWeiboViewController *nearByWeiboVC = [[NearByWeiboViewController alloc] init];
-    
+    nearByWeiboVC.hidesBottomBarWhenPushed = YES;
     [self.navigationController pushViewController:nearByWeiboVC animated:YES];
     
 }

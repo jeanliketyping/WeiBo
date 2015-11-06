@@ -7,8 +7,16 @@
 //
 
 #import "BaseViewController.h"
+#import <CoreLocation/CoreLocation.h>
+#import "PoiModel.h"
+@interface NearShopsViewController : BaseViewController<UITableViewDataSource,UITableViewDelegate,CLLocationManagerDelegate>{
+    UITableView *_tableView;
+    //位置管理
+    CLLocationManager *_locationManager;
+    
+}
 
-@interface NearShopsViewController : BaseViewController
+@property (nonatomic,strong)NSArray *dataList;//用来存放  服务器返回的地理位置
 
 
 @end

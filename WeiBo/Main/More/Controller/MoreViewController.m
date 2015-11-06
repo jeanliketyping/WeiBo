@@ -153,7 +153,6 @@
 
 - (void)storeAuthData
 {
-    
     NSDictionary *authData = [NSDictionary dictionaryWithObjectsAndKeys:
                               _sinaWeibo.accessToken, @"AccessTokenKey",
                               _sinaWeibo.expirationDate, @"ExpirationDateKey",
@@ -163,7 +162,6 @@
     [[NSUserDefaults standardUserDefaults] synchronize];
     
     NSLog(@"%@",NSHomeDirectory());
-    
 }
 
 - (void)removeAuthData
@@ -178,7 +176,6 @@
     UIAlertView *alert = [[UIAlertView alloc] initWithTitle:nil message:@"登录成功" delegate:nil cancelButtonTitle:@"确认" otherButtonTitles:nil, nil];
     alert.delegate = self;
     [alert show];
-    
     [self storeAuthData];
 }
 //确认登出

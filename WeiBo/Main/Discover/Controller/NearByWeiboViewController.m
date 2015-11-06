@@ -7,8 +7,7 @@
 //
 
 #import "NearByWeiboViewController.h"
-#import <MapKit/MapKit.h>
-#import <CoreLocation/CoreLocation.h>
+
 #import "WeiboAnnotation.h"
 #import "WeiboAnnotationView.h"
 #import "DataService.h"
@@ -20,8 +19,8 @@
  3 实现mapView 的协议方法 ,创建标注视图
  */
 
-@interface NearByWeiboViewController ()<CLLocationManagerDelegate,MKMapViewDelegate>{
-//    CLLocationManager *_locationManager;
+@interface NearByWeiboViewController (){
+    CLLocationManager *_locationManager;
     MKMapView *_mapView;
 }
 
@@ -53,49 +52,23 @@
 }
 
 - (void)_createViews{
-    
     _mapView = [[MKMapView alloc] initWithFrame:self.view.bounds];
     //显示用户位置
     _mapView.showsUserLocation = YES;
     //地图种类
     _mapView.mapType = MKMapTypeStandard;
     //用户跟踪模式
-//    _mapView.userTrackingMode = MKUserTrackingModeFollow;
-    
+    _mapView.userTrackingMode = MKUserTrackingModeFollow;
     _mapView.delegate = self;
     [self.view addSubview:_mapView];
-    
 }
 
 #pragma mark - mapView代理
-- (void)mapView:(MKMapView *)mapView didSelectAnnotationView:(MKAnnotationView *)view{
-    
-    NSLog(@"选中");
-    if (![view.annotation isKindOfClass:[WeiboAnnotation class]]) {
-        return;
-    }
-    
-    WeiboAnnotation *weiboAnnotation = (WeiboAnnotation *)view.annotation;
-    WeiboModel *model = weiboAnnotation.model;
-    
-    WeiboDetailViewController *vc = [[WeiboDetailViewController alloc] init];
-    vc.model = model;
-    
-    [self.navigationController pushViewController:vc animated:YES];
-    
-}
-
 - (void)mapView:(MKMapView *)mapView didUpdateUserLocation:(MKUserLocation *)userLocation{
-    
     CLLocation *location = userLocation.location;
     CLLocationCoordinate2D coordinate = location.coordinate;
-    
     NSLog(@"经度：%lf 纬度：%lf",coordinate.longitude,coordinate.latitude);
     
-    NSString *longitude = [NSString stringWithFormat:@"%lf",coordinate.longitude];
-    NSString *latitude = [NSString stringWithFormat:@"%lf",coordinate.latitude];
-    [self _loadNearByData:longitude lat:latitude];
-
     //    typedef struct {
     //        CLLocationDegrees latitudeDelta;
     //        CLLocationDegrees longitudeDelta;
@@ -114,11 +87,14 @@
     
     mapView.region = region;
 
+    //网络获取附近微博
+    NSString *longitude = [NSString stringWithFormat:@"%lf",coordinate.longitude];
+    NSString *latitude = [NSString stringWithFormat:@"%lf",coordinate.latitude];
+    [self _loadNearByData:longitude lat:latitude];
 }
 
 //标注视图
 //- (MKAnnotationView *)mapView:(MKMapView *)mapView viewForAnnotation:(id<MKAnnotation>)annotation{
-//    
 //    //处理用户当前位置
 //    if ([annotation isKindOfClass:[MKUserLocation class]]) {
 //        return nil;
@@ -141,54 +117,51 @@
 //}
 
 - (MKAnnotationView *)mapView:(MKMapView *)mapView viewForAnnotation:(id<MKAnnotation>)annotation{
+    //处理用户当前位置
     if ([annotation isKindOfClass:[MKUserLocation class]]) {
         return nil;
     }else if ([annotation isKindOfClass:[WeiboAnnotation class]]){
-        
-        WeiboAnnotationView *view = [mapView dequeueReusableAnnotationViewWithIdentifier:@"view"];
+        WeiboAnnotationView *view = (WeiboAnnotationView *)[mapView dequeueReusableAnnotationViewWithIdentifier:@"view"];
         if (view == nil) {
             view = [[WeiboAnnotationView alloc] initWithAnnotation:annotation reuseIdentifier:@"view"];
         }
-        
         view.annotation = annotation;
-        
         [view setNeedsLayout];
-        
         return view;
     }
     return nil;
 }
 
+//点击标注视图
+- (void)mapView:(MKMapView *)mapView didSelectAnnotationView:(MKAnnotationView *)view{
+    NSLog(@"选中");
+    if (![view.annotation isKindOfClass:[WeiboAnnotation class]]) {
+        return;
+    }
+    WeiboAnnotation *weiboAnnotation = (WeiboAnnotation *)view.annotation;
+    WeiboModel *model = weiboAnnotation.model;
+    WeiboDetailViewController *vc = [[WeiboDetailViewController alloc] init];
+    vc.model = model;
+    [self.navigationController pushViewController:vc animated:YES];
+}
 
+//获取附近微博
 -(void)_loadNearByData:(NSString *)lon lat:(NSString *)lat{
-    
     NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
     [params setObject:lon forKey:@"long"];
     [params setObject:lat forKey:@"lat"];
-    
     [DataService requestAFUrl:nearby_timeline httpMethod:@"GET" params:params data:nil block:^(id result) {
         NSArray *statuses = [result objectForKey:@"statuses"];
         NSMutableArray *annotationArray = [[NSMutableArray alloc] initWithCapacity:statuses.count];
         for (NSDictionary *dic in statuses) {
-            
             WeiboModel *model = [[WeiboModel alloc] initWithDataDic:dic];
             WeiboAnnotation *annotation = [[WeiboAnnotation alloc] init];
             annotation.model = model;
-            
             [annotationArray addObject: annotation];
         }
-        
         [_mapView addAnnotations:annotationArray];
     }];
 }
-
-
-
-
-
-
-
-
 
 /*
 #pragma mark - Navigation

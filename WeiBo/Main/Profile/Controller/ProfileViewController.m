@@ -129,10 +129,7 @@
     
     _friends = [[FriendsListViewController alloc] init];
 }
-
-
-
-//加载更多以往数据
+//上拉加载更多以往数据
 - (void)_loadMoreData{
     AppDelegate *delegate = (AppDelegate *)[UIApplication sharedApplication].delegate;
     SinaWeibo *sinaWeibo = delegate.sinaWeibo;
@@ -155,11 +152,9 @@
         UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"请登录" message:nil delegate:nil cancelButtonTitle:@"确认" otherButtonTitles:nil, nil];
         [alert show];
     }
-    
-    
 }
 
-//加载数据
+//普通加载数据
 - (void)_loadData{
     AppDelegate *delegate = (AppDelegate *)[UIApplication sharedApplication].delegate;
     SinaWeibo *sinaWeibo = delegate.sinaWeibo;
@@ -176,36 +171,26 @@
         UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"请登录" message:nil delegate:nil cancelButtonTitle:@"确认" otherButtonTitles:nil, nil];
         [alert show];
     }
-    
 }
 
 //加载个人数据
 - (void)_loadProfileData:(WeiboModel *)weiboModel{
-    
     NSString *urlStr = weiboModel.userModel.avatar_large;
     [_iconImageView sd_setImageWithURL:[NSURL URLWithString:urlStr]];
-    
     _nickNameLabel.text = weiboModel.userModel.screen_name;
-    
     NSString *genderText;
     if ([weiboModel.userModel.gender isEqualToString:@"f"]) {
         genderText = @"女";
     }else if ([weiboModel.userModel.gender isEqualToString:@"m"]){
         genderText = @"男";
     }
-    
     _msgLabel.text = [NSString stringWithFormat:@"%@ %@",genderText,weiboModel.userModel.location];
-    
     _descriptionLabel.text =
     [NSString stringWithFormat:@"简介:%@",weiboModel.userModel.description];
-    
     UILabel *friendsLabel = (UILabel *)[self.view viewWithTag:300];
     friendsLabel.text = [weiboModel.userModel.friends_count stringValue];
-    
     UILabel *followersLabel = (UILabel *)[self.view viewWithTag:301];
     followersLabel.text = [weiboModel.userModel.followers_count stringValue];
-    
-    
 }
 
 - (void)followersList:(UIButton *)button{
@@ -213,12 +198,10 @@
     [self.navigationController pushViewController:_followers animated:YES];
 }
 
-
 - (void)friendsList:(UIButton *)button{
     NSLog(@"关注列表");
     [self.navigationController pushViewController:_friends animated:YES];
 }
-
 
 - (void)request:(SinaWeiboRequest *)request didFailWithError:(NSError *)error
 {
@@ -227,31 +210,24 @@
 
 - (void)request:(SinaWeiboRequest *)request didFinishLoadingWithResult:(id)result
 {
-    
     NSLog(@"%@",result);
-    
     //每一条微博存到 数组里
     NSArray *statusesArray = [result objectForKey:@"statuses"];
     NSMutableArray *layoutFrameArray = [[NSMutableArray alloc] init];
     
     //解析model
     for (NSDictionary *dic in statusesArray) {
-        
         WeiboModel *model = [[WeiboModel alloc] initWithDataDic:dic
-                             ];
+                         ];
         WeiboViewLayoutFrame *layout = [[WeiboViewLayoutFrame alloc] init];
         layout.model = model;
         [layoutFrameArray addObject:layout];
     }
-    
     WeiboViewLayoutFrame *layoutLatest = [layoutFrameArray lastObject];
     WeiboModel *weiboModel = layoutLatest.model;
-    
     _followers.model = layoutLatest.model;
     _friends.model = layoutLatest.model;
-    
     [self _loadProfileData:weiboModel];
-    
     if (request.tag == 600) {//普通加载
         _data = layoutFrameArray;
     }else if (request.tag == 601){//加载更多
@@ -263,17 +239,11 @@
         }
     }
     if (_data != nil) {
-        
         _tableView.data = _data;
         [_tableView reloadData];
     }
-    
     [_tableView.footer endRefreshing];
 }
-
-
-
-
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];

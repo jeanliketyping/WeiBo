@@ -7,7 +7,8 @@
 //
 
 #import "BaseViewController.h"
-
-@interface NearByWeiboViewController : BaseViewController
+#import <MapKit/MapKit.h>
+#import <CoreLocation/CoreLocation.h>
+@interface NearByWeiboViewController : BaseViewController<CLLocationManagerDelegate,MKMapViewDelegate>
 
 @end

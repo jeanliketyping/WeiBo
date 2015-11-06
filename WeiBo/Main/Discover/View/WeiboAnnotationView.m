@@ -22,40 +22,27 @@
 }
 
 - (void)_createViews{
-    
     _headImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 40, 40)];
     _headImageView.image = [UIImage imageNamed:@"icon"];
-    
     _textLabel = [[UILabel alloc] initWithFrame:CGRectMake(40, 0, 100, 40)];
     _textLabel.backgroundColor  =[UIColor lightGrayColor];
     _textLabel.text = @"hello";
-    
-    
     [self addSubview:_headImageView];
     [self addSubview:_textLabel];
     
 }
 
 - (void)layoutSubviews{
-    
     [super layoutSubviews];
-    
-    
     WeiboAnnotation *annotation = self.annotation;
-    
     WeiboModel *model = annotation.model;
-    
     //微博内容
     _textLabel.text = model.text;
     _textLabel.font = [UIFont systemFontOfSize:10];
     _textLabel.numberOfLines = 3;
-    
     //头像
     NSString *urlStr = model.userModel.profile_image_url;
-    
     [_headImageView sd_setImageWithURL:[NSURL URLWithString:urlStr] placeholderImage:[UIImage imageNamed:@"icon"]];
-    
-
 }
 
 
